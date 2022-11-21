@@ -512,9 +512,22 @@ func TestSet_SUnion(t *testing.T) {
 		{"key1", "key3", nil},
 	}
 	sortSlice := func(bytes [][]byte) {
-		sort.Slice(bytes, func(i, j int) bool {
-			return string(bytes[i]) < string(bytes[j])
-		})
+		le := func(i, j int) bool {
+			b1 := bytes[i]
+			b2 := bytes[j]
+			length := len(b1)
+			if length > len(b2) {
+				length = len(b2)
+			}
+
+			for i := 0; i < length; i++ {
+				if b1[i] > b2[i] {
+					return false
+				}
+			}
+			return true
+		}
+		sort.Slice(bytes, le)
 	}
 	for _, tt := range tests {
 		res, _ := mySet.SUnion(tt.key1, tt.key2)
@@ -523,4 +536,18 @@ func TestSet_SUnion(t *testing.T) {
 		assertions.Equal(res, tt.res)
 
 	}
+}
+
+func less(b1, b2 []byte) bool {
+	length := len(b1)
+	if length > len(b2) {
+		length = len(b2)
+	}
+
+	for i := 0; i < length; i++ {
+		if b1[i] > b2[i] {
+			return false
+		}
+	}
+	return true
 }
