@@ -92,8 +92,8 @@ func TestMetrics_Update(t *testing.T) {
 	type fields struct {
 		validEntries   int32
 		invalidEntries int32
-		validBytes     int64
-		invalidBytes   int64
+		validBytes     int32
+		invalidBytes   int32
 	}
 	type args struct {
 		validEntriesChange   int
@@ -129,8 +129,8 @@ func TestMetrics_UpdateInvalid(t *testing.T) {
 	type fields struct {
 		validEntries   int32
 		invalidEntries int32
-		validBytes     int64
-		invalidBytes   int64
+		validBytes     int32
+		invalidBytes   int32
 	}
 	type args struct {
 		entries int
@@ -164,8 +164,8 @@ func TestMetrics_UpdateMetrics(t *testing.T) {
 	type fields struct {
 		validEntries   int32
 		invalidEntries int32
-		validBytes     int64
-		invalidBytes   int64
+		validBytes     int32
+		invalidBytes   int32
 	}
 	type args struct {
 		change Metrics
@@ -198,8 +198,8 @@ func TestMetrics_UpdateValid(t *testing.T) {
 	type fields struct {
 		validEntries   int32
 		invalidEntries int32
-		validBytes     int64
-		invalidBytes   int64
+		validBytes     int32
+		invalidBytes   int32
 	}
 	type args struct {
 		entries int

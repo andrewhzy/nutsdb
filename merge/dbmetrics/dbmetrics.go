@@ -3,14 +3,15 @@ package dbmetrics
 import (
 	"math"
 	"sync"
+	"sync/atomic"
 )
 
 type (
 	Metrics struct {
 		validEntries   int32
 		invalidEntries int32
-		validBytes     int64
-		invalidBytes   int64
+		validBytes     int32
+		invalidBytes   int32
 	}
 	dbMetrics map[int32]Metrics
 )
@@ -18,64 +19,61 @@ type (
 var (
 	once   sync.Once
 	dbm    dbMetrics
-	locks  []sync.RWMutex
+	locks  []int64
 	n, mod int
 )
 
-func Init() { initiate(8) }
+func Init() { initiate(18) }
 func initiate(lockNum int) {
 	once.Do(func() {
 		dbm = make(dbMetrics)
 		n = 1 << int(math.Log2(float64(lockNum)))
+		locks = make([]int64, n)
 		mod = n - 1
-		locks = make([]sync.RWMutex, n)
-		for i := 0; i < n; i++ {
-			locks[i] = sync.RWMutex{}
-		}
 	})
 }
 func GetZeroMetrics() *Metrics { return &Metrics{0, 0, 0, 0} }
 
 func DeleteMetrics(fd int) {
-	for !locks[fd&mod].TryLock() {
+	for atomic.CompareAndSwapInt64(&locks[fd&mod], 0, -1) {
 	}
 	delete(dbm, int32(fd))
-	locks[fd&mod].Unlock()
+	locks[fd&mod] = 0
 
 }
 
 func PutMetrics(fd int, m *Metrics) {
-	for !locks[fd&mod].TryLock() {
+	for atomic.CompareAndSwapInt64(&locks[fd&mod], 0, -1) {
 	}
 	dbm[int32(fd)] = *m
-	locks[fd&mod].Unlock()
+	locks[fd&mod] = 0
 
 }
 
 func GetMetrics(fd int) (m Metrics, ok bool) {
-	for !locks[fd&mod].TryRLock() {
+	for atomic.CompareAndSwapInt64(&locks[fd&mod], 0, -1) {
 	}
 	m, ok = dbm[int32(fd)]
-	locks[fd&mod].RUnlock()
+	locks[fd&mod] = 0
 
 	return
 }
 
 func (m *Metrics) UpdateValid(entriesChange, bytesChange int) {
 	m.validEntries += int32(entriesChange)
-	m.validBytes += int64(bytesChange)
+	m.validBytes += int32(bytesChange)
 }
 
 func (m *Metrics) UpdateInvalid(entriesChange, bytesChange int) {
 	m.invalidEntries += int32(entriesChange)
-	m.invalidBytes += int64(bytesChange)
+	m.invalidBytes += int32(bytesChange)
 }
 
 func (m *Metrics) Update(validEntriesChange, invalidEntriesChange, validBytesChange, invalidBytesChange int) {
 	m.validEntries += int32(validEntriesChange)
 	m.invalidEntries += int32(invalidEntriesChange)
-	m.validBytes += int64(validBytesChange)
-	m.invalidBytes += int64(invalidBytesChange)
+	m.validBytes += int32(validBytesChange)
+	m.invalidBytes += int32(invalidBytesChange)
 }
 
 func (m *Metrics) UpdateMetrics(change Metrics) {
