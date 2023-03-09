@@ -26,8 +26,8 @@ func TestDeleteMetrics(t *testing.T) {
 
 func TestGetMetrics(t *testing.T) {
 	Init()
-	PutMetrics(1, Metrics{1, 1, 1, 1})
-	PutMetrics(2, Metrics{2, 2, 2, 2})
+	PutMetrics(1, &Metrics{1, 1, 1, 1})
+	PutMetrics(2, &Metrics{2, 2, 2, 2})
 	type args struct {
 		fd int
 	}
@@ -72,14 +72,14 @@ func TestPutMetrics(t *testing.T) {
 	Init()
 	type args struct {
 		fd int
-		m  Metrics
+		m  *Metrics
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
-		{"", args{1, Metrics{1, 1, 1, 1}}},
-		{"", args{12, Metrics{2, 2, 2, 2}}},
+		{"", args{1, &Metrics{1, 1, 1, 1}}},
+		{"", args{12, &Metrics{2, 2, 2, 2}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
